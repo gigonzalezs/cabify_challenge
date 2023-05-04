@@ -20,6 +20,8 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    exclude 'com/cabify/MainKt'
+    exclude 'com/cabify/App'
 }
 
 compileKotlin {
@@ -31,5 +33,5 @@ compileTestKotlin {
 }
 
 application {
-    mainClassName = 'MainKt'
+    mainClassName = 'AppKt'
 }

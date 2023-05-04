@@ -5,18 +5,24 @@ import org.springframework.stereotype.Service
 
 @Service
 class GroupRepository {
-    private val groupMap = mutableMapOf<Int, Group>()
+    private val groupsByID = mutableMapOf<Int, Group>()
     private val groupFifo = mutableListOf<Group>()
     private var groupIterator: Iterator<Group>? = null
 
     fun save(group: Group) {
-        groupMap[group.id] = group
-        groupFifo.add(group)
+        if (groupsByID.containsKey(group.id)) {
+            throw CarPoolingException("Group already exists")
+        }
+        if (group.numberOfPeople in 1..6) {
+            groupsByID[group.id] = group
+            groupFifo.add(group)
+        } else {
+            throw CarPoolingException("Group people must be between 1 and 6")
+        }
     }
 
-    fun findById(id: Int): Group? {
-        return groupMap[id]
-    }
+    fun findById(id: Int): Group = groupsByID[id] ?:
+        throw CarPoolingException("Group not exists")
 
     fun findFirst(): Group? {
         groupIterator = groupFifo.iterator()
@@ -36,9 +42,9 @@ class GroupRepository {
     }
 
     fun deleteById(id: Int) {
-        val group = groupMap[id]
+        val group = groupsByID[id]
         if (group != null) {
-            groupMap.remove(id)
+            groupsByID.remove(id)
             groupFifo.remove(group)
             groupIterator = null
         } else {
@@ -46,3 +52,4 @@ class GroupRepository {
         }
     }
 }
+
