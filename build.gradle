@@ -1,6 +1,7 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.8.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
     id 'application'
+    id("org.springframework.boot") version "2.6.4"
 }
 
 group = 'com.cabify'
@@ -11,6 +12,7 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-webflux:2.6.4'
     testImplementation 'org.jetbrains.kotlin:kotlin-test'
 }
 
@@ -19,11 +21,11 @@ test {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = '1.8'
+    kotlinOptions.jvmTarget = '11'
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = '1.8'
+    kotlinOptions.jvmTarget = '11'
 }
 
 application {
