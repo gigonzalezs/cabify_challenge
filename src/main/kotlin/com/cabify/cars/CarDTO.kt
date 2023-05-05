@@ -1,4 +1,8 @@
 package com.cabify.cars
 
-class CarDTO {
-}
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class CarDTO(
+    @JsonProperty("id") val id: Int,
+    @JsonProperty("seats") val seats: Int
+)

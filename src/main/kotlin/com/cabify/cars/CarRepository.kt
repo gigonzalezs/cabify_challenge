@@ -40,4 +40,6 @@ class CarRepository {
 
     fun findById(id: Int): Car = carsById[id] ?:
         throw CarPoolException("Car not exists")
+
+    fun findAll(): List<Car> = carsById.values.toList()
 }
