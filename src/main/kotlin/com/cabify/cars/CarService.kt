@@ -9,6 +9,9 @@ class CarService(
     private val carRepository: CarRepository
     ) {
 
+    fun clear() {
+        carRepository.clear()
+    }
     fun saveAll(cars: Flux<CarDTO>): Mono<Void> = cars
         .map { carDTO -> Car(carDTO.id, carDTO.seats) }
         .doOnNext { car -> carRepository.save(car) }

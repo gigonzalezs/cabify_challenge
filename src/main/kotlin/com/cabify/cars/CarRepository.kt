@@ -2,11 +2,17 @@ package com.cabify.cars
 
 import com.cabify.CarPoolException
 import org.springframework.stereotype.Service
+import javax.annotation.PostConstruct
 
 @Service
 class CarRepository {
-    private val carsBySeats = Array<MutableList<Car>>(7) { mutableListOf() }
-    private val carsById = HashMap<Int, Car>()
+    private var carsBySeats: Array<MutableList<Car>> = Array(7) { mutableListOf() }
+    private var carsById: HashMap<Int, Car> = HashMap()
+
+    fun clear() {
+        carsBySeats = Array(7) { mutableListOf() }
+        carsById = HashMap()
+    }
 
     fun save(car: Car) {
         if (carsById.containsKey(car.id)) {

@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 @Service
 class AppStatusService {
 
-    private var status: Boolean = false
+    private var status: Boolean = true
 
     fun getStatus(): Boolean = status
 

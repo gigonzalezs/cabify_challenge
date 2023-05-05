@@ -14,7 +14,10 @@ class CarsController(
 
     @PutMapping("/cars", consumes = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseStatus(HttpStatus.OK)
-    fun loadCars(@RequestBody cars: Flux<CarDTO>): Mono<Void> = carService.saveAll(cars)
+    fun loadCars(@RequestBody cars: Flux<CarDTO>): Mono<Void>  {
+        carService.clear()
+        return carService.saveAll(cars)
+    }
 
     @GetMapping("/cars", produces = [MediaType.APPLICATION_JSON_VALUE])
     fun readCars(): Flux<CarDTO> = carService.findAll()
