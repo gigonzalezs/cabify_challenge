@@ -1,6 +1,5 @@
 package com.cabify.carPool
 
-import com.cabify.carPool.CarPoolServiceTest.Companion.findFirstByPeople
 import com.cabify.cars.Car
 import com.cabify.cars.CarRepository
 import com.cabify.groups.Group
@@ -9,10 +8,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.util.function.Consumer
 import java.util.stream.Stream
 import kotlin.test.Ignore
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+typealias CarPoolScenarioAsserts = Consumer<CarPoolServiceTest.CarPoolScenario>
 
 class CarPoolServiceTest {
 
@@ -24,7 +26,8 @@ class CarPoolServiceTest {
         val name: String,
         val cars: List<Car>,
         val groups: List<Group>,
-        val expectedMatches: List<ExpectedMatch>
+        val expectedMatches: List<ExpectedMatch>,
+        val additionalAsserts: CarPoolScenarioAsserts? = null
     )
 
     data class ExpectedMatch(val car: Car, val groups: List<Group>)
@@ -109,9 +112,16 @@ class CarPoolServiceTest {
                 ExpectedMatch(cars.findFirstBySeats(6)!!, listOf(groups.findFirstByPeople(1)!!)),
                 ExpectedMatch(cars.findFirstBySeats(6)!!, listOf(groups.findFirstByPeople(5)!!)),
             )
+            val additionalAsserts = CarPoolScenarioAsserts {
+                val car = cars.findFirstBySeats(6)!!
+                val firstGroup = car.groups[0]
+                val secondGroup = car.groups[1]
+                assertEquals(1, firstGroup.numberOfPeople)
+                assertEquals(5, secondGroup.numberOfPeople)
+            }
             return CarPoolScenario(
                 "cars 6 seats, groups of 1 and 5 people, assign all groups to same car",
-                cars, groups, expectedMatches)
+                cars, groups, expectedMatches, additionalAsserts)
         }
 
         private fun `Scenario #3`()
@@ -124,17 +134,26 @@ class CarPoolServiceTest {
                     groups.findFirstByPeople(1)!!)
                 )
             )
+
+            val additionalAsserts = CarPoolScenarioAsserts {
+                val car = cars.findFirstBySeats(6)!!
+                val firstGroup = car.groups[0]
+                val secondGroup = car.groups[1]
+                assertEquals(5, firstGroup.numberOfPeople)
+                assertEquals(1, secondGroup.numberOfPeople)
+            }
+
             return CarPoolScenario(
                 "cars 6 seats, groups of 5 and 1 people, assign all groups to same car",
-                cars, groups, expectedMatches)
+                cars, groups, expectedMatches, additionalAsserts)
         }
 
         @JvmStatic
         fun provideCarPoolScenarios(): Stream<CarPoolScenario> {
 
             return Stream.of(
-                //`Scenario #1`(),
-                // `Scenario #2`(),
+                `Scenario #1`(),
+                `Scenario #2`(),
                 `Scenario #3`()
             )
         }
@@ -166,6 +185,7 @@ class CarPoolServiceTest {
                 assertTrue(car.groups.contains(group))
             }
         }
+        scenario.additionalAsserts?.accept(scenario)
     }
 
     @Ignore
