@@ -5,10 +5,15 @@ import org.springframework.stereotype.Service
 
 @Service
 class GroupRepository {
-    private val groupsByID = mutableMapOf<Int, Group>()
-    private val groupFifo = mutableListOf<Group>()
+    private var groupsByID = mutableMapOf<Int, Group>()
+    private var groupFifo = mutableListOf<Group>()
     private var groupIterator: Iterator<Group>? = null
 
+    fun clear() {
+        groupsByID = mutableMapOf()
+        groupFifo = mutableListOf()
+        groupIterator = null
+    }
     fun save(group: Group) {
         if (groupsByID.containsKey(group.id)) {
             throw CarPoolException("Group already exists")

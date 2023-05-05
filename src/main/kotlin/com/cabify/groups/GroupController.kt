@@ -20,11 +20,21 @@ class GroupController(private val groupService: GroupService) {
 
     @PostMapping("/locate", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun locate(@RequestParam("id") groupId: Int): Mono<CarDTO> {
-        return groupService.locate(groupId)
+    fun locate(request: LocateRequestForm): Mono<CarDTO> {
+        return groupService.locate(request.id)
             .switchIfEmpty(
                 Mono.error(ResponseStatusException(HttpStatus.NO_CONTENT))
             )
+            .onErrorResume(CarPoolException::class.java) {
+                Mono.error(ResponseStatusException(HttpStatus.NOT_FOUND, it.message))
+            }
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping("/dropoff", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
+        produces = [MediaType.APPLICATION_JSON_VALUE])
+    fun dropoff(@RequestParam("id") groupId: Int): Mono<Void> {
+        return groupService.dropOff(groupId)
             .onErrorResume(CarPoolException::class.java) {
                 Mono.error(ResponseStatusException(HttpStatus.NOT_FOUND, it.message))
             }
