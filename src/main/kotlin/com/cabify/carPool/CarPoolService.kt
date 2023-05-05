@@ -1,5 +1,6 @@
 package com.cabify.carPool
 
+import com.cabify.cars.Car
 import com.cabify.cars.CarRepository
 import com.cabify.groups.Group
 import com.cabify.groups.GroupRepository
@@ -22,17 +23,29 @@ class CarPoolService(
         }
     }
 
-    fun Group.assignCar(carSeats: Int = MAX_SEATS): Boolean {
+    private fun Group.assignCar(): Boolean {
+        val availableCars = carRepository.findByAvailableSeats(this.numberOfPeople)
+        return if (availableCars.isNotEmpty()) {
+            this.assignCarFromAvailable(availableCars)
+        } else {
+            this.lookUpCarsBySeatAndAssign(MAX_SEATS)
+        }
+    }
+
+    private fun Group.assignCarFromAvailable(availableCars: List<Car>): Boolean {
+        val selectedCar = availableCars.first()
+        selectedCar.addGroup(this)
+        carRepository.update(selectedCar)
+        groupRepository.deQueue(this)
+        return true
+    }
+    fun Group.lookUpCarsBySeatAndAssign(carSeats: Int): Boolean {
         val availableCars = carRepository.findByAvailableSeats(carSeats)
         return if (availableCars.isNotEmpty()) {
-            val selectedCar = availableCars.first()
-            selectedCar.addGroup(this)
-            carRepository.update(selectedCar)
-            groupRepository.deQueue(this)
-            true
+            this.assignCarFromAvailable(availableCars)
         } else {
             return if (MIN_SEATS < carSeats && carSeats > this.numberOfPeople) {
-                 this.assignCar(carSeats - 1)
+                 this.lookUpCarsBySeatAndAssign(carSeats - 1)
             } else {
                 false
             }

@@ -15,176 +15,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-typealias CarPoolScenarioAsserts = Consumer<CarPoolServiceTest.CarPoolScenario>
-
 class CarPoolServiceTest {
 
     private lateinit var carRepository: CarRepository
     private lateinit var groupRepository: GroupRepository
     private lateinit var carPoolService: CarPoolService
 
-    data class CarPoolScenario(
-        val name: String,
-        val cars: List<Car>,
-        val groups: List<Group>,
-        val expectedMatches: List<ExpectedMatch>,
-        val additionalAsserts: CarPoolScenarioAsserts? = null
-    )
-
-    data class ExpectedMatch(val car: Car, val groups: List<Group>)
-
     companion object {
-
-        enum class CarSort { ById, BySeatsAsc, BySeatsDesc }
-
-        private fun provideCars(
-            minSeats: Int = 1,
-            maxSeats: Int = 6,
-            carsBySeat: Int = 1,
-            sorting: CarSort = CarSort.ById,
-            includeSeatOnly: List<Int> = listOf(1,2,3,4,5,6)
-        ): List<Car> {
-            val cars = mutableListOf<Car>()
-            var id = 0;
-            for (seats in minSeats..maxSeats) {
-                if (includeSeatOnly.contains(seats)) {
-                    for (j in 1..carsBySeat) {
-                        cars.add(Car(++id, seats))
-                    }
-                }
-            }
-            if (sorting == CarSort.BySeatsAsc) {
-                cars.sortBy { it.totalSeats }
-            } else if (sorting == CarSort.BySeatsDesc) {
-                cars.sortByDescending { it.totalSeats }
-            }
-            return cars
-        }
-
-        enum class GroupSort { ById, ByPeopleAsc, ByPeopleDesc }
-
-        private fun provideGroups(
-            minPeople: Int = 1,
-            maxPeople: Int = 6,
-            groupsByPeople: Int = 1,
-            sorting: GroupSort = GroupSort.ById,
-            includePeopleOnly: List<Int> = listOf(1,2,3,4,5,6)
-        ): List<Group> {
-            val groups = mutableListOf<Group>()
-            var id = 0;
-            for (people in minPeople..maxPeople) {
-                if (includePeopleOnly.contains(people)) {
-                    for (j in 1..groupsByPeople) {
-                        groups.add(Group(++id, people))
-                    }
-                }
-            }
-            if (sorting == GroupSort.ByPeopleAsc) {
-                groups.sortBy { it.numberOfPeople }
-            } else if (sorting == GroupSort.ByPeopleDesc) {
-                groups.sortByDescending { it.numberOfPeople }
-            }
-            return groups
-        }
-
-        private fun List<Car>.findFirstBySeats(seats: Int) : Car? =
-            this.firstOrNull { it.totalSeats == seats }
-
-        private fun List<Group>.findFirstByPeople(people: Int) : Group? =
-            this.firstOrNull { it.numberOfPeople == people }
-
-        private fun `Scenario #1`()
-        : CarPoolScenario {
-            val name = "unique cars 1-6 seats, group of 6 people, assign car"
-            val cars = provideCars(sorting = CarSort.BySeatsAsc)
-            val groups = provideGroups(minPeople = 6)
-            val expectedMatches = listOf(
-                ExpectedMatch(cars.findFirstBySeats(6)!!, listOf(groups.findFirstByPeople(6)!!)),
-                )
-            return CarPoolScenario(name, cars, groups, expectedMatches)
-        }
-
-        private fun `Scenario #2`()
-                : CarPoolScenario {
-            val name = "cars 6 seats, groups of 1 and 5 people, assign all groups to same car"
-            val cars = provideCars(includeSeatOnly = listOf(6))
-            val groups = provideGroups(includePeopleOnly = listOf(1,5), sorting = GroupSort.ByPeopleAsc)
-            val expectedMatches = listOf(
-                ExpectedMatch(cars.findFirstBySeats(6)!!, listOf(groups.findFirstByPeople(1)!!)),
-                ExpectedMatch(cars.findFirstBySeats(6)!!, listOf(groups.findFirstByPeople(5)!!)),
-            )
-            val additionalAsserts = CarPoolScenarioAsserts {
-                val car = cars.findFirstBySeats(6)!!
-                val firstGroup = car.groups[0]
-                val secondGroup = car.groups[1]
-                assertEquals(1, firstGroup.numberOfPeople)
-                assertEquals(5, secondGroup.numberOfPeople)
-            }
-            return CarPoolScenario(name, cars, groups, expectedMatches, additionalAsserts)
-        }
-
-        private fun `Scenario #3`()
-                : CarPoolScenario {
-            val name = "cars 6 seats, groups of 5 and 1 people, assign all groups to same car"
-            val cars = provideCars(includeSeatOnly = listOf(6))
-            val groups = provideGroups(includePeopleOnly = listOf(1,5), sorting = GroupSort.ByPeopleDesc)
-            val expectedMatches = listOf(
-                ExpectedMatch(cars.findFirstBySeats(6)!!, listOf(
-                    groups.findFirstByPeople(5)!!,
-                    groups.findFirstByPeople(1)!!)
-                )
-            )
-
-            val additionalAsserts = CarPoolScenarioAsserts {
-                val car = cars.findFirstBySeats(6)!!
-                val firstGroup = car.groups[0]
-                val secondGroup = car.groups[1]
-                assertEquals(5, firstGroup.numberOfPeople)
-                assertEquals(1, secondGroup.numberOfPeople)
-            }
-
-            return CarPoolScenario(name, cars, groups, expectedMatches, additionalAsserts)
-        }
-
-        private fun `Scenario #4`()
-                : CarPoolScenario {
-            val name = "car 5 seats, groups of 6, unable to assign car"
-            val cars = provideCars(includeSeatOnly = listOf(5))
-            val groups = provideGroups(includePeopleOnly = listOf(6))
-            val expectedMatches = emptyList<ExpectedMatch>()
-
-            val additionalAsserts = CarPoolScenarioAsserts {
-                val car = cars.findFirstBySeats(5)!!
-                assertTrue(car.groups.isEmpty())
-                val group = groups.findFirstByPeople(6)!!
-                assertNull(group.assignedCar)
-
-            }
-
-            return CarPoolScenario(name, cars, groups, expectedMatches, additionalAsserts)
-        }
-
-        private fun `Scenario #5`()
-                : CarPoolScenario {
-            val name = "car 1-6 seats with 3-6 full occupied, group of 2, assign car"
-            val cars = provideCars()
-            val groups = provideGroups(includePeopleOnly = listOf(2))
-
-            cars.findFirstBySeats(6)!!.occupySeats(6)
-            cars.findFirstBySeats(5)!!.occupySeats(5)
-            cars.findFirstBySeats(4)!!.occupySeats(4)
-            cars.findFirstBySeats(3)!!.occupySeats(3)
-
-
-            val expectedMatches = listOf(
-                ExpectedMatch(cars.findFirstBySeats(2)!!, listOf(
-                    groups.findFirstByPeople(2)!!,
-                    )
-                )
-            )
-
-            return CarPoolScenario(name, cars, groups, expectedMatches)
-        }
 
         @JvmStatic
         fun provideCarPoolScenarios(): Stream<CarPoolScenario> {
@@ -194,7 +31,13 @@ class CarPoolServiceTest {
                 `Scenario #2`(),
                 `Scenario #3`(),
                 `Scenario #4`(),
-                `Scenario #5`()
+                `Scenario #5`(),
+                `Asegurando el orden de llegada de los grupos y optimizacion de asientos ocupados`(),
+                `Varios Grupos entran en el mismo carro`(),
+                `Asegurando el orden de llegada de los grupos, ultimo grupo sin asignar`(),
+                `Asegurando el orden de llegada de los grupos, grupo en el medio sin asignar`(),
+                `Pocos carros y no hay carros con asientos disponibles`(),
+                `Muchos carros y no hay carros con asientos disponibles`()
             )
         }
     }
@@ -226,17 +69,5 @@ class CarPoolServiceTest {
             }
         }
         scenario.additionalAsserts?.accept(scenario)
-    }
-
-    @Ignore
-    @Test
-    fun `Given a group, When assigning a car with available seats, Then a car is assigned`() {
-        // TODO: Configure mock objects, call the assignCar method, and assert the expected result.
-    }
-
-    @Ignore
-    @Test
-    fun `Given a group, When assigning a car with no available seats, Then no car is assigned`() {
-        // TODO: Configure mock objects, call the assignCar method, and assert the expected result.
     }
 }
