@@ -12,6 +12,7 @@ import java.util.function.Consumer
 import java.util.stream.Stream
 import kotlin.test.Ignore
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 typealias CarPoolScenarioAsserts = Consumer<CarPoolServiceTest.CarPoolScenario>
@@ -94,18 +95,18 @@ class CarPoolServiceTest {
 
         private fun `Scenario #1`()
         : CarPoolScenario {
+            val name = "unique cars 1-6 seats, group of 6 people, assign car"
             val cars = provideCars(sorting = CarSort.BySeatsAsc)
             val groups = provideGroups(minPeople = 6)
             val expectedMatches = listOf(
                 ExpectedMatch(cars.findFirstBySeats(6)!!, listOf(groups.findFirstByPeople(6)!!)),
                 )
-            return CarPoolScenario(
-                "unique cars 1-6 seats, group of 6 people, assign car",
-                cars, groups, expectedMatches)
+            return CarPoolScenario(name, cars, groups, expectedMatches)
         }
 
         private fun `Scenario #2`()
                 : CarPoolScenario {
+            val name = "cars 6 seats, groups of 1 and 5 people, assign all groups to same car"
             val cars = provideCars(includeSeatOnly = listOf(6))
             val groups = provideGroups(includePeopleOnly = listOf(1,5), sorting = GroupSort.ByPeopleAsc)
             val expectedMatches = listOf(
@@ -119,13 +120,12 @@ class CarPoolServiceTest {
                 assertEquals(1, firstGroup.numberOfPeople)
                 assertEquals(5, secondGroup.numberOfPeople)
             }
-            return CarPoolScenario(
-                "cars 6 seats, groups of 1 and 5 people, assign all groups to same car",
-                cars, groups, expectedMatches, additionalAsserts)
+            return CarPoolScenario(name, cars, groups, expectedMatches, additionalAsserts)
         }
 
         private fun `Scenario #3`()
                 : CarPoolScenario {
+            val name = "cars 6 seats, groups of 5 and 1 people, assign all groups to same car"
             val cars = provideCars(includeSeatOnly = listOf(6))
             val groups = provideGroups(includePeopleOnly = listOf(1,5), sorting = GroupSort.ByPeopleDesc)
             val expectedMatches = listOf(
@@ -143,9 +143,25 @@ class CarPoolServiceTest {
                 assertEquals(1, secondGroup.numberOfPeople)
             }
 
-            return CarPoolScenario(
-                "cars 6 seats, groups of 5 and 1 people, assign all groups to same car",
-                cars, groups, expectedMatches, additionalAsserts)
+            return CarPoolScenario(name, cars, groups, expectedMatches, additionalAsserts)
+        }
+
+        private fun `Scenario #4`()
+                : CarPoolScenario {
+            val name = "car 5 seats, groups of 6, unable to assign car"
+            val cars = provideCars(includeSeatOnly = listOf(5))
+            val groups = provideGroups(includePeopleOnly = listOf(6))
+            val expectedMatches = emptyList<ExpectedMatch>()
+
+            val additionalAsserts = CarPoolScenarioAsserts {
+                val car = cars.findFirstBySeats(5)!!
+                assertTrue(car.groups.isEmpty())
+                val group = groups.findFirstByPeople(6)!!
+                assertNull(group.assignedCar)
+
+            }
+
+            return CarPoolScenario(name, cars, groups, expectedMatches, additionalAsserts)
         }
 
         @JvmStatic
@@ -154,7 +170,8 @@ class CarPoolServiceTest {
             return Stream.of(
                 `Scenario #1`(),
                 `Scenario #2`(),
-                `Scenario #3`()
+                `Scenario #3`() ,
+                `Scenario #4`()
             )
         }
     }

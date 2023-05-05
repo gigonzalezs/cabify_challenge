@@ -31,7 +31,7 @@ class CarPoolService(
             groupRepository.deQueue(this)
             true
         } else {
-            return if (carSeats > MIN_SEATS) {
+            return if (MIN_SEATS < carSeats && carSeats > this.numberOfPeople) {
                  this.assignCar(carSeats - 1)
             } else {
                 false
