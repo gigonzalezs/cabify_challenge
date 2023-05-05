@@ -1,6 +1,6 @@
 package com.cabify.groups
 
-import com.cabify.CarPoolingException
+import com.cabify.CarPoolException
 import org.springframework.stereotype.Service
 
 @Service
@@ -11,18 +11,18 @@ class GroupRepository {
 
     fun save(group: Group) {
         if (groupsByID.containsKey(group.id)) {
-            throw CarPoolingException("Group already exists")
+            throw CarPoolException("Group already exists")
         }
         if (group.numberOfPeople in 1..6) {
             groupsByID[group.id] = group
             groupFifo.add(group)
         } else {
-            throw CarPoolingException("Group people must be between 1 and 6")
+            throw CarPoolException("Group people must be between 1 and 6")
         }
     }
 
     fun findById(id: Int): Group = groupsByID[id] ?:
-        throw CarPoolingException("Group not exists")
+        throw CarPoolException("Group not exists")
 
     fun findFirst(): Group? {
         groupIterator = groupFifo.iterator()
@@ -48,7 +48,7 @@ class GroupRepository {
             groupFifo.remove(group)
             groupIterator = null
         } else {
-            throw CarPoolingException("Group not found in the repository")
+            throw CarPoolException("Group not found in the repository")
         }
     }
 }

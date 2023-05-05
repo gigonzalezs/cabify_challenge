@@ -1,6 +1,6 @@
 package com.cabify.cars
 
-import com.cabify.CarPoolingException
+import com.cabify.CarPoolException
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -38,7 +38,7 @@ class CarRepositoryTest {
 
         carRepository.save(car)
 
-        assertThrows<CarPoolingException> { carRepository.save(anotherCar) }
+        assertThrows<CarPoolException> { carRepository.save(anotherCar) }
     }
 
     @Test
@@ -63,7 +63,7 @@ class CarRepositoryTest {
     fun `Given an invalid number of available seats, When finding cars by available seats, Then an exception is thrown`() {
         val invalidSeats = -1
 
-        assertThrows<CarPoolingException> { carRepository.findByAvailableSeats(invalidSeats) }
+        assertThrows<CarPoolException> { carRepository.findByAvailableSeats(invalidSeats) }
     }
 
     @Test
@@ -72,7 +72,7 @@ class CarRepositoryTest {
         val totalSeats = 7
         val car = Car(carId, totalSeats)
 
-        assertThrows<CarPoolingException> { carRepository.save(car) }
+        assertThrows<CarPoolException> { carRepository.save(car) }
     }
 
     @Test
@@ -81,7 +81,7 @@ class CarRepositoryTest {
         val totalSeats = 0
         val car = Car(carId, totalSeats)
 
-        assertThrows<CarPoolingException> { carRepository.save(car) }
+        assertThrows<CarPoolException> { carRepository.save(car) }
     }
 
     @Test
@@ -92,7 +92,7 @@ class CarRepositoryTest {
 
         carRepository.save(car)
 
-        assertThrows<CarPoolingException> { carRepository.update(car) }
+        assertThrows<CarPoolException> { carRepository.update(car) }
     }
 
     @Test
@@ -111,6 +111,6 @@ class CarRepositoryTest {
     fun `Given a car not saved, When finding it by ID, Then an exception is thrown`() {
         val carId = 1
 
-        assertThrows<CarPoolingException> { carRepository.findById(carId) }
+        assertThrows<CarPoolException> { carRepository.findById(carId) }
     }
 }

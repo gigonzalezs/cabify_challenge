@@ -1,6 +1,6 @@
 package com.cabify.groups
 
-import com.cabify.CarPoolingException
+import com.cabify.CarPoolException
 import com.cabify.cars.Car
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -62,7 +62,7 @@ class GroupTest {
 
         group.assignCar(car)
 
-        assertThrows<CarPoolingException> { group.assignCar(anotherCar) }
+        assertThrows<CarPoolException> { group.assignCar(anotherCar) }
     }
 
     @Test
@@ -71,6 +71,6 @@ class GroupTest {
         val people = 4
         val group = Group(groupId, people)
 
-        assertThrows<CarPoolingException> { group.releaseCar() }
+        assertThrows<CarPoolException> { group.releaseCar() }
     }
 }

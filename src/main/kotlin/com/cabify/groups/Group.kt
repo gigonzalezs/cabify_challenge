@@ -1,6 +1,6 @@
 package com.cabify.groups
 
-import com.cabify.CarPoolingException
+import com.cabify.CarPoolException
 import com.cabify.cars.Car
 
 class Group(val id: Int, val numberOfPeople: Int) {
@@ -12,7 +12,7 @@ class Group(val id: Int, val numberOfPeople: Int) {
         if (_assignedCar == null) {
             _assignedCar = car
         } else {
-            throw CarPoolingException("Cannot assign a car if one is already assigned")
+            throw CarPoolException("Cannot assign a car if one is already assigned")
         }
     }
 
@@ -20,7 +20,11 @@ class Group(val id: Int, val numberOfPeople: Int) {
         if (_assignedCar != null) {
             _assignedCar = null
         } else {
-            throw CarPoolingException("Cannot release a car if none is assigned")
+            throw CarPoolException("Cannot release a car if none is assigned")
         }
+    }
+
+    override fun toString(): String {
+        return "Group(id=$id, people=$numberOfPeople, car=${_assignedCar?.id ?: "none"})"
     }
 }

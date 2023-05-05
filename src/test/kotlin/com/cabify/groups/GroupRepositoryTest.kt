@@ -1,6 +1,6 @@
 package com.cabify.groups
 
-import com.cabify.CarPoolingException
+import com.cabify.CarPoolException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -56,14 +56,14 @@ class GroupRepositoryTest {
         groupRepository.save(group)
         groupRepository.deleteById(groupId)
 
-        assertThrows<CarPoolingException> { groupRepository.findById(groupId) }
+        assertThrows<CarPoolException> { groupRepository.findById(groupId) }
     }
 
     @Test
     fun `Given a non-existent group ID, When deleting it, Then an exception is thrown`() {
         val nonExistentGroupId = 1
 
-        assertThrows<CarPoolingException> { groupRepository.deleteById(nonExistentGroupId) }
+        assertThrows<CarPoolException> { groupRepository.deleteById(nonExistentGroupId) }
     }
 
     @Test
@@ -108,7 +108,7 @@ class GroupRepositoryTest {
 
         groupRepository.save(group)
 
-        assertThrows<CarPoolingException> { groupRepository.save(anotherGroup) }
+        assertThrows<CarPoolException> { groupRepository.save(anotherGroup) }
     }
 
     @Test
@@ -117,7 +117,7 @@ class GroupRepositoryTest {
         val invalidPeopleCount = 0
         val group = Group(groupId, invalidPeopleCount)
 
-        assertThrows<CarPoolingException> { groupRepository.save(group) }
+        assertThrows<CarPoolException> { groupRepository.save(group) }
     }
 
     @Test
@@ -126,6 +126,6 @@ class GroupRepositoryTest {
         val tooManyPeople = 7
         val group = Group(groupId, tooManyPeople)
 
-        assertThrows<CarPoolingException> { groupRepository.save(group) }
+        assertThrows<CarPoolException> { groupRepository.save(group) }
     }
 }

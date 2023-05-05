@@ -1,6 +1,6 @@
 package com.cabify.cars
 
-import com.cabify.CarPoolingException
+import com.cabify.CarPoolException
 import com.cabify.groups.Group
 
 class Car(val id: Int, val totalSeats: Int) {
@@ -24,7 +24,7 @@ class Car(val id: Int, val totalSeats: Int) {
             updatePreviousAvailableSeats()
             occupiedSeats += amount
         } else {
-            throw CarPoolingException("Cannot occupy more seats than available")
+            throw CarPoolException("Cannot occupy more seats than available")
         }
     }
 
@@ -33,20 +33,20 @@ class Car(val id: Int, val totalSeats: Int) {
             updatePreviousAvailableSeats()
             occupiedSeats -= amount
         } else {
-            throw CarPoolingException("Cannot release more seats than occupied")
+            throw CarPoolException("Cannot release more seats than occupied")
         }
     }
 
     fun addGroup(group: Group) {
         if (group.assignedCar != null) {
-            throw CarPoolingException("Group already has a car assigned")
+            throw CarPoolException("Group already has a car assigned")
         }
         if (group.numberOfPeople <= availableSeats) {
             _groups.add(group)
             occupySeats(group.numberOfPeople)
             group.assignCar(this)
         } else {
-            throw CarPoolingException("Not enough available seats for the group")
+            throw CarPoolException("Not enough available seats for the group")
         }
     }
 
@@ -55,7 +55,18 @@ class Car(val id: Int, val totalSeats: Int) {
             releaseSeats(group.numberOfPeople)
             group.releaseCar()
         } else {
-            throw CarPoolingException("Group is not in the car")
+            throw CarPoolException("Group is not in the car")
         }
     }
+
+    override fun toString(): String {
+        return "Car(id=$id, seats=$totalSeats, availables=$availableSeats), groups=[${groupsAsString()}]"
+    }
+
+    private fun groupsAsString(): String = groups
+        .takeIf { it.isNotEmpty() }
+        ?.map { "${it.id}-(${it.numberOfPeople})" }
+        ?.toString()
+        ?: ""
+
 }

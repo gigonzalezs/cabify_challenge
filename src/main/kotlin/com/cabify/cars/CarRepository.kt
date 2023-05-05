@@ -1,6 +1,6 @@
 package com.cabify.cars
 
-import com.cabify.CarPoolingException
+import com.cabify.CarPoolException
 import org.springframework.stereotype.Service
 
 @Service
@@ -10,13 +10,13 @@ class CarRepository {
 
     fun save(car: Car) {
         if (carsById.containsKey(car.id)) {
-            throw CarPoolingException("Car already exists")
+            throw CarPoolException("Car already exists")
         }
         if (car.totalSeats in 1..6) {
             carsBySeats[car.availableSeats].add(car)
             carsById[car.id] = car
         } else {
-            throw CarPoolingException("Car seats must be between 1 and 6")
+            throw CarPoolException("Car seats must be between 1 and 6")
         }
     }
 
@@ -26,7 +26,7 @@ class CarRepository {
             carsBySeats[previousAvailableSeats].remove(car)
             carsBySeats[car.availableSeats].add(car)
         } else {
-            throw CarPoolingException("Car has not changed its available seats")
+            throw CarPoolException("Car has not changed its available seats")
         }
     }
 
@@ -34,10 +34,10 @@ class CarRepository {
         if (seats in 1..6) {
             return carsBySeats[seats]
         } else {
-            throw CarPoolingException("Invalid number of available seats: $seats")
+            throw CarPoolException("Invalid number of available seats: $seats")
         }
     }
 
     fun findById(id: Int): Car = carsById[id] ?:
-        throw CarPoolingException("Car not exists")
+        throw CarPoolException("Car not exists")
 }

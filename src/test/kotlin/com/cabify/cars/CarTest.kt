@@ -1,6 +1,6 @@
 package com.cabify.cars
 
-import com.cabify.CarPoolingException
+import com.cabify.CarPoolException
 import com.cabify.groups.Group
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -42,7 +42,7 @@ class CarTest {
         val car = Car(carId, totalSeats)
         val seatsToOccupy = 6
 
-        assertThrows<CarPoolingException> { car.occupySeats(seatsToOccupy) }
+        assertThrows<CarPoolException> { car.occupySeats(seatsToOccupy) }
     }
 
     @Test
@@ -55,7 +55,7 @@ class CarTest {
 
         car.occupySeats(initialSeatsToOccupy)
 
-        assertThrows<CarPoolingException> { car.releaseSeats(seatsToRelease) }
+        assertThrows<CarPoolException> { car.releaseSeats(seatsToRelease) }
     }
 
     @Test
@@ -117,7 +117,7 @@ class CarTest {
         val groupSize = 7
         val group = Group(groupId, groupSize)
 
-        assertThrows<CarPoolingException> { car.addGroup(group) }
+        assertThrows<CarPoolException> { car.addGroup(group) }
     }
 
     @Test
@@ -129,7 +129,7 @@ class CarTest {
         val groupSize = 4
         val group = Group(groupId, groupSize)
 
-        assertThrows<CarPoolingException> { car.removeGroup(group) }
+        assertThrows<CarPoolException> { car.removeGroup(group) }
     }
 
     @Test
@@ -145,7 +145,7 @@ class CarTest {
 
         group.assignCar(anotherCar)
 
-        assertThrows<CarPoolingException> { car.addGroup(group) }
+        assertThrows<CarPoolException> { car.addGroup(group) }
     }
 
 }

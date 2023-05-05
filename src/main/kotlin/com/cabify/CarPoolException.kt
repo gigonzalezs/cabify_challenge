@@ -1,5 +1,5 @@
 package com.cabify
 
-class CarPoolingException(
+class CarPoolException(
     override val message: String
     ): RuntimeException(message)
