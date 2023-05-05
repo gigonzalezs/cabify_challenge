@@ -164,14 +164,37 @@ class CarPoolServiceTest {
             return CarPoolScenario(name, cars, groups, expectedMatches, additionalAsserts)
         }
 
+        private fun `Scenario #5`()
+                : CarPoolScenario {
+            val name = "car 1-6 seats with 3-6 full occupied, group of 2, assign car"
+            val cars = provideCars()
+            val groups = provideGroups(includePeopleOnly = listOf(2))
+
+            cars.findFirstBySeats(6)!!.occupySeats(6)
+            cars.findFirstBySeats(5)!!.occupySeats(5)
+            cars.findFirstBySeats(4)!!.occupySeats(4)
+            cars.findFirstBySeats(3)!!.occupySeats(3)
+
+
+            val expectedMatches = listOf(
+                ExpectedMatch(cars.findFirstBySeats(2)!!, listOf(
+                    groups.findFirstByPeople(2)!!,
+                    )
+                )
+            )
+
+            return CarPoolScenario(name, cars, groups, expectedMatches)
+        }
+
         @JvmStatic
         fun provideCarPoolScenarios(): Stream<CarPoolScenario> {
 
             return Stream.of(
                 `Scenario #1`(),
                 `Scenario #2`(),
-                `Scenario #3`() ,
-                `Scenario #4`()
+                `Scenario #3`(),
+                `Scenario #4`(),
+                `Scenario #5`()
             )
         }
     }
