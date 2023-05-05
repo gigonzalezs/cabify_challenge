@@ -1,5 +1,6 @@
 package com.cabify.carPool
 
+import com.cabify.carPool.CarPoolServiceTest.Companion.findFirstByPeople
 import com.cabify.cars.Car
 import com.cabify.cars.CarRepository
 import com.cabify.groups.Group
@@ -36,13 +37,16 @@ class CarPoolServiceTest {
             minSeats: Int = 1,
             maxSeats: Int = 6,
             carsBySeat: Int = 1,
-            sorting: CarSort = CarSort.ById
+            sorting: CarSort = CarSort.ById,
+            includeSeatOnly: List<Int> = listOf(1,2,3,4,5,6)
         ): List<Car> {
             val cars = mutableListOf<Car>()
             var id = 0;
             for (seats in minSeats..maxSeats) {
-                for (j in 1..carsBySeat) {
-                    cars.add(Car(++id, seats))
+                if (includeSeatOnly.contains(seats)) {
+                    for (j in 1..carsBySeat) {
+                        cars.add(Car(++id, seats))
+                    }
                 }
             }
             if (sorting == CarSort.BySeatsAsc) {
@@ -59,13 +63,16 @@ class CarPoolServiceTest {
             minPeople: Int = 1,
             maxPeople: Int = 6,
             groupsByPeople: Int = 1,
-            sorting: GroupSort = GroupSort.ById
+            sorting: GroupSort = GroupSort.ById,
+            includePeopleOnly: List<Int> = listOf(1,2,3,4,5,6)
         ): List<Group> {
             val groups = mutableListOf<Group>()
             var id = 0;
             for (people in minPeople..maxPeople) {
-                for (j in 1..groupsByPeople) {
-                    groups.add(Group(++id, people))
+                if (includePeopleOnly.contains(people)) {
+                    for (j in 1..groupsByPeople) {
+                        groups.add(Group(++id, people))
+                    }
                 }
             }
             if (sorting == GroupSort.ByPeopleAsc) {
@@ -94,11 +101,41 @@ class CarPoolServiceTest {
                 cars, groups, expectedMatches)
         }
 
+        private fun `Scenario #2`()
+                : CarPoolScenario {
+            val cars = provideCars(includeSeatOnly = listOf(6))
+            val groups = provideGroups(includePeopleOnly = listOf(1,5), sorting = GroupSort.ByPeopleAsc)
+            val expectedMatches = listOf(
+                ExpectedMatch(cars.findFirstBySeats(6)!!, listOf(groups.findFirstByPeople(1)!!)),
+                ExpectedMatch(cars.findFirstBySeats(6)!!, listOf(groups.findFirstByPeople(5)!!)),
+            )
+            return CarPoolScenario(
+                "cars 6 seats, groups of 1 and 5 people, assign all groups to same car",
+                cars, groups, expectedMatches)
+        }
+
+        private fun `Scenario #3`()
+                : CarPoolScenario {
+            val cars = provideCars(includeSeatOnly = listOf(6))
+            val groups = provideGroups(includePeopleOnly = listOf(1,5), sorting = GroupSort.ByPeopleDesc)
+            val expectedMatches = listOf(
+                ExpectedMatch(cars.findFirstBySeats(6)!!, listOf(
+                    groups.findFirstByPeople(5)!!,
+                    groups.findFirstByPeople(1)!!)
+                )
+            )
+            return CarPoolScenario(
+                "cars 6 seats, groups of 5 and 1 people, assign all groups to same car",
+                cars, groups, expectedMatches)
+        }
+
         @JvmStatic
         fun provideCarPoolScenarios(): Stream<CarPoolScenario> {
 
             return Stream.of(
-                `Scenario #1`()
+                //`Scenario #1`(),
+                // `Scenario #2`(),
+                `Scenario #3`()
             )
         }
     }

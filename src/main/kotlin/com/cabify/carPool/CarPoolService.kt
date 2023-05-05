@@ -15,7 +15,7 @@ class CarPoolService(
         var currentGroup = groupRepository.findFirst()
         while (currentGroup != null) {
             if (currentGroup.assignCar()) {
-                currentGroup = null
+                currentGroup = groupRepository.findFirst()
             } else {
                 currentGroup = groupRepository.getNext()
             }
@@ -28,6 +28,7 @@ class CarPoolService(
             val selectedCar = availableCars.first()
             selectedCar.addGroup(this)
             carRepository.update(selectedCar)
+            groupRepository.deQueue(this)
             true
         } else {
             return if (carSeats > MIN_SEATS) {

@@ -51,5 +51,14 @@ class GroupRepository {
             throw CarPoolException("Group not found in the repository")
         }
     }
+
+    fun deQueue(group: Group) {
+        if (groupFifo.contains(group)) {
+            groupFifo.remove(group)
+            groupIterator = null
+        } else {
+            throw CarPoolException("Group not found in the queue")
+        }
+    }
 }
 
