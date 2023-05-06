@@ -8,7 +8,10 @@ data class CarPoolAssignmentJob(
     var task: Mono<Unit>? = null,
     var status: JobStatus = JobStatus.QUEUED,
     var result: String? = null
-)
+) {
+    val isFinished: Boolean
+        get() = status == JobStatus.COMPLETED || status == JobStatus.CANCELED
+}
 
 enum class JobStatus {
     QUEUED,

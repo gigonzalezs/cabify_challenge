@@ -77,7 +77,17 @@ fun List<Car>.findFirstBySeats(seats: Int) : Car? =
 fun List<Group>.findFirstByPeople(people: Int) : Group? =
     this.firstOrNull { it.numberOfPeople == people }
 
-
+fun `Asignacion 1 to 1`(): CarPoolScenario {
+    val name = "Asignacion 1 to 1"
+    val cars = provideCars(includeSeatOnly = listOf(4))
+    val groups = provideGroups(includePeopleOnly = listOf(4))
+    val expectedMatches = listOf(
+        ExpectedMatch(cars.findFirstBySeats(4)!!, listOf(
+            groups.findFirstByPeople(4)!!)
+        ),
+    )
+    return CarPoolScenario(name, cars, groups, expectedMatches)
+}
 fun `Asegurando el orden de llegada de los grupos y optimizacion de asientos ocupados`(): CarPoolScenario {
     val name = "Asegurando el orden de llegada de los grupos y optimizacion de asientos ocupados"
     val cars = provideCars(includeSeatOnly = listOf(5, 4))

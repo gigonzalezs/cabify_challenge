@@ -10,8 +10,6 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.Sinks
 import reactor.core.scheduler.Schedulers
-import java.util.*
-import javax.annotation.PostConstruct
 
 @Service
 open class CarPoolService(
@@ -24,13 +22,12 @@ open class CarPoolService(
     private var jobSink: Sinks.Many<CarPoolAssignmentJob> = Sinks.many().multicast().onBackpressureBuffer()
     private val jobsFlux: Flux<CarPoolAssignmentJob> = jobSink.asFlux()
 
-
-    @PostConstruct
-    fun init() {
+    init {
         jobsFlux.doOnNext { job ->
             logger.debug("Nuevo trabajo encontrado con id: {}", job.id)
             job.task?.subscribeOn(Schedulers.boundedElastic())?.subscribe()
-        }
+
+        }.subscribeOn(Schedulers.boundedElastic()).subscribe()
     }
 
     fun clear() {
@@ -46,12 +43,12 @@ open class CarPoolService(
     fun enable() {
         enabled = true
     }
-    fun updateAssignations(): Mono<Void> {
+    fun createAssignationJob(newJob: CarPoolAssignmentJob? = null): Mono<Void> {
         if (!enabled) {
             return Mono.empty()
         }
         return Mono.just(
-            CarPoolAssignmentJob()
+            newJob ?: CarPoolAssignmentJob()
         ).doOnNext { job ->
             job.task = Mono.fromCallable {
                 if (job.status != JobStatus.CANCELED) {

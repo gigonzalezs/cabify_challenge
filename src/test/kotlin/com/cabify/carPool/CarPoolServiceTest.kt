@@ -1,20 +1,17 @@
 package com.cabify.carPool
 
-import com.cabify.cars.Car
 import com.cabify.cars.CarRepository
-import com.cabify.groups.Group
 import com.cabify.groups.GroupRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.*
-import java.util.function.Consumer
 import java.util.stream.Stream
-import kotlin.test.Ignore
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+
 
 class CarPoolServiceTest {
 
@@ -43,7 +40,6 @@ class CarPoolServiceTest {
         }
     }
 
-
     @BeforeEach
     fun setUp() {
         carRepository = CarRepository()
@@ -61,7 +57,7 @@ class CarPoolServiceTest {
         scenario.cars.forEach { car -> carRepository.save(car) }
         scenario.groups.forEach { group -> groupRepository.save(group) }
 
-        val job =CarPoolAssignmentJob()
+        val job = CarPoolAssignmentJob()
         carPoolService.assignCarToGroups(job)
 
         scenario.expectedMatches.forEach { expectedMatch ->
@@ -72,4 +68,18 @@ class CarPoolServiceTest {
         }
         scenario.additionalAsserts?.accept(scenario)
     }
+
+    @Test
+    fun `Given car and group, When updateAssignations, Then a Job assign the group to car`() =
+        runBlocking {
+            val scenario = `Asignacion 1 to 1`()
+            scenario.cars.forEach { car -> carRepository.save(car) }
+            scenario.groups.forEach { group -> groupRepository.save(group) }
+            val job = CarPoolAssignmentJob()
+            carPoolService.createAssignationJob(job).block()
+            while (!job.isFinished) {
+                print("waiting for job completes")
+                delay(500)
+            }
+        }
 }

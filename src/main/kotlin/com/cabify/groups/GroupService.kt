@@ -22,7 +22,7 @@ class GroupService(
     fun save(groupDTO: GroupDTO): Mono<Void> {
         val group = Group(groupDTO.id, groupDTO.people)
         groupRepository.save(group)
-        return carPoolService.updateAssignations()
+        return carPoolService.createAssignationJob()
     }
 
     fun locate(groupId: Int): Mono<CarDTO> {
@@ -43,7 +43,7 @@ class GroupService(
                 carRepository.update(this)
             }
             groupRepository.deleteById(groupId)
-            carPoolService.updateAssignations()
+            carPoolService.createAssignationJob()
         } catch (e: CarPoolException) {
             Mono.error(e)
         }
