@@ -29,7 +29,7 @@ remove_me:
 
 build_image:
   stage: docker
-  image: candidate-TBlYzNkNmU:latest
+  image: docker:dind
 #   variables:
 #     DOCKER_DRIVER: overlay2
 #     DOCKER_TLS_CERTDIR: ""
@@ -37,9 +37,8 @@ build_image:
   services:
     - docker:dind
   script:
-    - echo As a helper here you have a sample of how to build and push a docker image to the provided gitlab registry.
     - echo ${CI_JOB_TOKEN} | docker login --password-stdin -u ${CI_REGISTRY_USER} ${CI_REGISTRY}
-    - docker build . -t ${CI_REGISTRY_IMAGE}:latest
+    - docker build -t ${CI_REGISTRY_IMAGE}:latest .
     - docker push ${CI_REGISTRY_IMAGE}:latest
 
 ## Uncomment the acceptance step and do not remove or edit, this step is
