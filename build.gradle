@@ -1,7 +1,7 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.7.10'
     id 'application'
-    id("org.springframework.boot") version "2.6.4"
+    id 'org.springframework.boot' version "2.6.4"
 }
 
 group = 'com.cabify'
@@ -34,5 +34,12 @@ compileTestKotlin {
 }
 
 application {
-    mainClassName = 'AppKt'
+    mainClassName = 'com.cabify.AppKt'
 }
+
+bootJar {
+    archiveBaseName.set('app')
+    archiveVersion.set('')
+}
+
+jar.enabled = false
