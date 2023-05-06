@@ -6,9 +6,12 @@ import com.cabify.groups.Group
 import com.cabify.groups.GroupRepository
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.Sinks
 import reactor.core.scheduler.Schedulers
 import java.util.*
+import javax.annotation.PostConstruct
 
 @Service
 open class CarPoolService(
@@ -18,6 +21,17 @@ open class CarPoolService(
     private var enabled: Boolean = true
     private val logger = LoggerFactory.getLogger(CarPoolService::class.java)
     private var jobs = mutableListOf<CarPoolAssignmentJob>()
+    private var jobSink: Sinks.Many<CarPoolAssignmentJob> = Sinks.many().multicast().onBackpressureBuffer()
+    private val jobsFlux: Flux<CarPoolAssignmentJob> = jobSink.asFlux()
+
+
+    @PostConstruct
+    fun init() {
+        jobsFlux.doOnNext { job ->
+            logger.debug("Nuevo trabajo encontrado con id: {}", job.id)
+            job.task?.subscribeOn(Schedulers.boundedElastic())?.subscribe()
+        }
+    }
 
     fun clear() {
         jobs.forEach {
@@ -39,9 +53,6 @@ open class CarPoolService(
         return Mono.just(
             CarPoolAssignmentJob()
         ).doOnNext { job ->
-            jobs.add(job)
-            logger.debug("Creando nuevo trabajo con id: {}", job.id)
-
             job.task = Mono.fromCallable {
                 if (job.status != JobStatus.CANCELED) {
                     job.status = JobStatus.RUNNING
@@ -51,7 +62,7 @@ open class CarPoolService(
                     logger.debug("Trabajo con id {} ha finalizado con resultado: {}", job.id, job.result)
                 }
             }
-            (job.task as Mono<Unit>).subscribeOn(Schedulers.boundedElastic()).subscribe()
+            addJob(job)
         }.flatMap { Mono.empty() }
     }
 
@@ -70,6 +81,11 @@ open class CarPoolService(
         }
     }
 
+    private fun addJob(job: CarPoolAssignmentJob) {
+        logger.debug("Creando nuevo trabajo con id: {}", job.id)
+        jobs.add(job)
+        jobSink.tryEmitNext(job)
+    }
     private fun Group.assignCar(job: CarPoolAssignmentJob): Boolean {
         if (job.status == JobStatus.CANCELED) return false
         val availableCars = carRepository.findByAvailableSeats(this.numberOfPeople)
