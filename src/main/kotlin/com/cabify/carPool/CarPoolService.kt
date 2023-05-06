@@ -47,7 +47,7 @@ open class CarPoolService(
                 if ( job.status != "CANCELED") {
                     job.status = "EN PROGRESO"
                     logger.debug("Ejecutando trabajo con id: {}", job.id)
-                    job.result = executeJob()
+                    job.result = executeJob(job)
                     job.status = "FINALIZADO"
                     logger.debug("Trabajo con id {} ha finalizado con resultado: {}", job.id, job.result)
                 }
@@ -56,16 +56,15 @@ open class CarPoolService(
         }.flatMap { Mono.empty() }
     }
 
-    private fun executeJob(): String {
-        logger.debug("Simulando trabajo largo...")
-        Thread.sleep(5000)
+    private fun executeJob(job: CarPoolAssignmentJob): String {
+        assignCarToGroups(job)
         return "El trabajo se ha completado exitosamente."
     }
 
-    fun assignCarToGroups() {
+    fun assignCarToGroups(job: CarPoolAssignmentJob) {
         var currentGroup = groupRepository.findFirst()
-        while (currentGroup != null) {
-            if (currentGroup.assignCar()) {
+        while (currentGroup != null && job.status != "CANCELED") {
+            if (currentGroup.assignCar(job)) {
                 currentGroup = groupRepository.findFirst()
             } else {
                 currentGroup = groupRepository.getNext()
@@ -73,12 +72,13 @@ open class CarPoolService(
         }
     }
 
-    private fun Group.assignCar(): Boolean {
+    private fun Group.assignCar(job: CarPoolAssignmentJob): Boolean {
+        if (job.status == "CANCELED") return false
         val availableCars = carRepository.findByAvailableSeats(this.numberOfPeople)
         return if (availableCars.isNotEmpty()) {
             this.assignCarFromAvailable(availableCars)
         } else {
-            this.lookUpCarsBySeatAndAssign(MAX_SEATS)
+            this.lookUpCarsBySeatAndAssign(job,MAX_SEATS)
         }
     }
 
@@ -90,13 +90,14 @@ open class CarPoolService(
         return true
     }
 
-    fun Group.lookUpCarsBySeatAndAssign(carSeats: Int): Boolean {
+    fun Group.lookUpCarsBySeatAndAssign(job: CarPoolAssignmentJob, carSeats: Int): Boolean {
+        if (job.status == "CANCELED") return false
         val availableCars = carRepository.findByAvailableSeats(carSeats)
         return if (availableCars.isNotEmpty()) {
             this.assignCarFromAvailable(availableCars)
         } else {
             return if (MIN_SEATS < carSeats && carSeats > this.numberOfPeople) {
-                this.lookUpCarsBySeatAndAssign(carSeats - 1)
+                this.lookUpCarsBySeatAndAssign(job, carSeats - 1)
             } else {
                 false
             }

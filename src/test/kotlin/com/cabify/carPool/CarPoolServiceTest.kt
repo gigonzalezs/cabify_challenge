@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.util.*
 import java.util.function.Consumer
 import java.util.stream.Stream
 import kotlin.test.Ignore
@@ -60,7 +61,8 @@ class CarPoolServiceTest {
         scenario.cars.forEach { car -> carRepository.save(car) }
         scenario.groups.forEach { group -> groupRepository.save(group) }
 
-        carPoolService.assignCarToGroups()
+        val job =CarPoolAssignmentJob(UUID.randomUUID().toString(), "EN COLA", null, null)
+        carPoolService.assignCarToGroups(job)
 
         scenario.expectedMatches.forEach { expectedMatch ->
             val car = carRepository.findById(expectedMatch.car.id)

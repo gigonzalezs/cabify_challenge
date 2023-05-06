@@ -48,7 +48,7 @@ class GroupControllerIntegrationTest {
     @Test
     fun `POST journey should return 200 OK when group is registered correctly`() {
         val journey = GroupDTO(1, 4)
-
+        carPoolService.enable()
         webTestClient.post()
             .uri("/journey")
             .contentType(MediaType.APPLICATION_JSON)
