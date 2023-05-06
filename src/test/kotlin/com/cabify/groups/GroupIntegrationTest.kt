@@ -1,5 +1,6 @@
 package com.cabify.groups
 
+import com.cabify.carPool.CarPoolService
 import com.cabify.cars.Car
 import com.cabify.cars.CarDTO
 import com.cabify.cars.CarRepository
@@ -34,10 +35,14 @@ class GroupControllerIntegrationTest {
     @Autowired
     private lateinit var carRepository: CarRepository
 
+    @Autowired
+    private lateinit var carPoolService: CarPoolService
+
     @BeforeEach
     fun setUp() {
         groupService.clear()
         carRepository.clear()
+        carPoolService.disable()
     }
 
     @Test

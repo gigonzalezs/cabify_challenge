@@ -1,6 +1,7 @@
 package com.cabify.groups
 
 import com.cabify.CarPoolException
+import com.cabify.carPool.CarPoolService
 import com.cabify.cars.CarDTO
 import com.cabify.cars.CarRepository
 import com.cabify.cars.toDTO
@@ -10,7 +11,8 @@ import reactor.core.publisher.Mono
 @Service
 class GroupService(
     private val groupRepository: GroupRepository,
-    private val carRepository: CarRepository
+    private val carRepository: CarRepository,
+    private val carPoolService: CarPoolService
     ) {
 
     fun clear() {
@@ -20,7 +22,7 @@ class GroupService(
     fun save(groupDTO: GroupDTO): Mono<Void> {
         val group = Group(groupDTO.id, groupDTO.people)
         groupRepository.save(group)
-        return Mono.empty()
+        return carPoolService.updateAssignations()
     }
 
     fun locate(groupId: Int): Mono<CarDTO> {
@@ -41,7 +43,7 @@ class GroupService(
                 carRepository.update(this)
             }
             groupRepository.deleteById(groupId)
-            Mono.empty()
+            carPoolService.updateAssignations()
         } catch (e: CarPoolException) {
             Mono.error(e)
         }
