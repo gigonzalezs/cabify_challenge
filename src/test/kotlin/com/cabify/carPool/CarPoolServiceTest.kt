@@ -61,7 +61,7 @@ class CarPoolServiceTest {
         scenario.cars.forEach { car -> carRepository.save(car) }
         scenario.groups.forEach { group -> groupRepository.save(group) }
 
-        val job =CarPoolAssignmentJob(UUID.randomUUID().toString(), "EN COLA", null, null)
+        val job =CarPoolAssignmentJob()
         carPoolService.assignCarToGroups(job)
 
         scenario.expectedMatches.forEach { expectedMatch ->

@@ -21,7 +21,7 @@ open class CarPoolService(
 
     fun clear() {
         jobs.forEach {
-            it.status = "CANCELED"
+            it.status = JobStatus.CANCELED
         }
         jobs = mutableListOf<CarPoolAssignmentJob>()
     }
@@ -36,19 +36,18 @@ open class CarPoolService(
         if (!enabled) {
             return Mono.empty()
         }
-
         return Mono.just(
-            CarPoolAssignmentJob(UUID.randomUUID().toString(), "EN COLA", null, null)
+            CarPoolAssignmentJob()
         ).doOnNext { job ->
             jobs.add(job)
             logger.debug("Creando nuevo trabajo con id: {}", job.id)
 
             job.task = Mono.fromCallable {
-                if ( job.status != "CANCELED") {
-                    job.status = "EN PROGRESO"
+                if (job.status != JobStatus.CANCELED) {
+                    job.status = JobStatus.RUNNING
                     logger.debug("Ejecutando trabajo con id: {}", job.id)
-                    job.result = executeJob(job)
-                    job.status = "FINALIZADO"
+                    job.execute()
+                    job.status = JobStatus.COMPLETED
                     logger.debug("Trabajo con id {} ha finalizado con resultado: {}", job.id, job.result)
                 }
             }
@@ -56,14 +55,13 @@ open class CarPoolService(
         }.flatMap { Mono.empty() }
     }
 
-    private fun executeJob(job: CarPoolAssignmentJob): String {
-        assignCarToGroups(job)
-        return "El trabajo se ha completado exitosamente."
+    private fun CarPoolAssignmentJob.execute() {
+        assignCarToGroups(this)
     }
 
     fun assignCarToGroups(job: CarPoolAssignmentJob) {
         var currentGroup = groupRepository.findFirst()
-        while (currentGroup != null && job.status != "CANCELED") {
+        while (currentGroup != null && job.status != JobStatus.CANCELED) {
             if (currentGroup.assignCar(job)) {
                 currentGroup = groupRepository.findFirst()
             } else {
@@ -73,12 +71,12 @@ open class CarPoolService(
     }
 
     private fun Group.assignCar(job: CarPoolAssignmentJob): Boolean {
-        if (job.status == "CANCELED") return false
+        if (job.status == JobStatus.CANCELED) return false
         val availableCars = carRepository.findByAvailableSeats(this.numberOfPeople)
         return if (availableCars.isNotEmpty()) {
             this.assignCarFromAvailable(availableCars)
         } else {
-            this.lookUpCarsBySeatAndAssign(job,MAX_SEATS)
+            this.lookUpCarsBySeatAndAssign(job, MAX_SEATS)
         }
     }
 
@@ -90,8 +88,8 @@ open class CarPoolService(
         return true
     }
 
-    fun Group.lookUpCarsBySeatAndAssign(job: CarPoolAssignmentJob, carSeats: Int): Boolean {
-        if (job.status == "CANCELED") return false
+    private fun Group.lookUpCarsBySeatAndAssign(job: CarPoolAssignmentJob, carSeats: Int): Boolean {
+        if (job.status == JobStatus.CANCELED) return false
         val availableCars = carRepository.findByAvailableSeats(carSeats)
         return if (availableCars.isNotEmpty()) {
             this.assignCarFromAvailable(availableCars)

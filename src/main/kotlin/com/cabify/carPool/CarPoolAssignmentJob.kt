@@ -1,10 +1,18 @@
 package com.cabify.carPool
 
 import reactor.core.publisher.Mono
+import java.util.*
 
 data class CarPoolAssignmentJob(
-    val id: String,
-    var status: String,
-    var result: String?,
-    var task: Mono<Unit>?
+    val id: UUID = UUID.randomUUID(),
+    var status: JobStatus = JobStatus.QUEUED,
+    var result: String? = null,
+    var task: Mono<Unit>? = null
 )
+
+enum class JobStatus {
+    QUEUED,
+    RUNNING,
+    COMPLETED,
+    CANCELED
+}
