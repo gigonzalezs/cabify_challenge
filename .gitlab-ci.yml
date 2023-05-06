@@ -30,10 +30,10 @@ remove_me:
 build_image:
   stage: docker
   image: docker:dind
-#   variables:
-#     DOCKER_DRIVER: overlay2
-#     DOCKER_TLS_CERTDIR: ""
-#     DOCKER_HOST: tcp://docker:2375/
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375/
   services:
     - docker:dind
   script:
