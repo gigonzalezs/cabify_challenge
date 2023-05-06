@@ -17,8 +17,14 @@ open class CarPoolService(
 ) {
     private var enabled: Boolean = true
     private val logger = LoggerFactory.getLogger(CarPoolService::class.java)
-    private val jobs = mutableListOf<CarPoolAssignmentJob>()
+    private var jobs = mutableListOf<CarPoolAssignmentJob>()
 
+    fun clear() {
+        jobs.forEach {
+            it.status = "CANCELED"
+        }
+        jobs = mutableListOf<CarPoolAssignmentJob>()
+    }
     fun disable() {
         enabled = false
     }
@@ -32,18 +38,21 @@ open class CarPoolService(
         }
 
         return Mono.just(
-            CarPoolAssignmentJob(UUID.randomUUID().toString(), "EN COLA", null)
+            CarPoolAssignmentJob(UUID.randomUUID().toString(), "EN COLA", null, null)
         ).doOnNext { job ->
             jobs.add(job)
             logger.debug("Creando nuevo trabajo con id: {}", job.id)
 
-            Mono.fromCallable {
-                job.status = "EN PROGRESO"
-                logger.debug("Ejecutando trabajo con id: {}", job.id)
-                job.result = executeJob()
-                job.status = "FINALIZADO"
-                logger.debug("Trabajo con id {} ha finalizado con resultado: {}", job.id, job.result)
-            }.subscribeOn(Schedulers.boundedElastic()).subscribe()
+            job.task = Mono.fromCallable {
+                if ( job.status != "CANCELED") {
+                    job.status = "EN PROGRESO"
+                    logger.debug("Ejecutando trabajo con id: {}", job.id)
+                    job.result = executeJob()
+                    job.status = "FINALIZADO"
+                    logger.debug("Trabajo con id {} ha finalizado con resultado: {}", job.id, job.result)
+                }
+            }
+            (job.task as Mono<Unit>).subscribeOn(Schedulers.boundedElastic()).subscribe()
         }.flatMap { Mono.empty() }
     }
 
