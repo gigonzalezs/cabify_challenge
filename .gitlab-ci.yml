@@ -1,19 +1,8 @@
 ---
 stages:
-  - build
+#   - build
   - docker
   - acceptance
-
-remove_me:
-  stage: build
-  script:
-  - >
-     echo If you can see this you know that gitlab-ci is running.  You should
-     uncomment the sections that enable building the docker image and running
-     the acceptance tests.
-     Change any file as necessary to make tests pass in your language of
-     choice.  But be mindful that we will only accept challenges that are
-     passing acceptance.  Good luck!
 
 ## Uncomment the following sections to enable docker, image building and
 ## acceptance
@@ -40,9 +29,6 @@ build_image:
     - echo ${CI_JOB_TOKEN} | docker login --password-stdin -u ${CI_REGISTRY_USER} ${CI_REGISTRY}
     - docker build -t ${CI_REGISTRY_IMAGE}:latest .
     - docker push ${CI_REGISTRY_IMAGE}:latest
-
-## Uncomment the acceptance step and do not remove or edit, this step is
-## required for us to accept your submission!
 
 acceptance:
   image: cabify/challenge:latest
