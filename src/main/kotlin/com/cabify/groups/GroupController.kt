@@ -33,8 +33,8 @@ class GroupController(private val groupService: GroupService) {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/dropoff", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun dropoff(@RequestParam("id") groupId: Int): Mono<Void> {
-        return groupService.dropOff(groupId)
+    fun dropoff(request: LocateRequestForm): Mono<Void> {
+        return groupService.dropOff(request.id)
             .onErrorResume(CarPoolException::class.java) {
                 Mono.error(ResponseStatusException(HttpStatus.NOT_FOUND, it.message))
             }

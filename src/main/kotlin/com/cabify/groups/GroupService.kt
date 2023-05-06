@@ -1,5 +1,6 @@
 package com.cabify.groups
 
+import com.cabify.CarPoolException
 import com.cabify.cars.CarDTO
 import com.cabify.cars.CarRepository
 import com.cabify.cars.toDTO
@@ -23,19 +24,27 @@ class GroupService(
     }
 
     fun locate(groupId: Int): Mono<CarDTO> {
-        val group = groupRepository.findById(groupId)
-        val assignedCar = group.assignedCar ?: return Mono.empty()
-        return Mono.just(assignedCar.toDTO())
+        try {
+            val group = groupRepository.findById(groupId)
+            val assignedCar = group.assignedCar ?: return Mono.empty()
+            return Mono.just(assignedCar.toDTO())
+        } catch (e: CarPoolException) {
+            return Mono.error(e)
+        }
     }
 
     fun dropOff(groupId: Int): Mono<Void> {
-        val group = groupRepository.findById(groupId)
-        group.assignedCar?.apply {
-            this.removeGroup(group)
-            carRepository.update(this)
+        return try {
+            val group = groupRepository.findById(groupId)
+            group.assignedCar?.apply {
+                this.removeGroup(group)
+                carRepository.update(this)
+            }
+            groupRepository.deleteById(groupId)
+            Mono.empty()
+        } catch (e: CarPoolException) {
+            Mono.error(e)
         }
-        groupRepository.deleteById(groupId)
-        return Mono.empty()
     }
 
 }

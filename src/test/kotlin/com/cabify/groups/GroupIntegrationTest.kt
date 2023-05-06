@@ -1,8 +1,5 @@
 package com.cabify.groups
 
-import com.cabify.groups.GroupController
-import com.cabify.groups.GroupService
-import com.cabify.CarPoolException
 import com.cabify.cars.Car
 import com.cabify.cars.CarDTO
 import com.cabify.cars.CarRepository
@@ -13,16 +10,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
-import org.springframework.web.server.ResponseStatusException
-import reactor.core.publisher.Mono
 import kotlin.test.assertEquals
 
 @ExtendWith(SpringExtension::class)
@@ -45,6 +37,7 @@ class GroupControllerIntegrationTest {
     @BeforeEach
     fun setUp() {
         groupService.clear()
+        carRepository.clear()
     }
 
     @Test
@@ -82,12 +75,13 @@ class GroupControllerIntegrationTest {
 
     @Test
     fun `POST locate should return 200 OK when group car is located`() {
-        val groupId = 1
-        val car = Car(1, 4)
+        val groupId = 100
+        val car = Car(100, 4)
         carRepository.save(car)
         val group = Group(groupId, 4)
         groupRepository.save(group)
         car.addGroup(group)
+        carRepository.update(car)
 
         val response = webTestClient.post()
             .uri("/locate")
@@ -104,24 +98,70 @@ class GroupControllerIntegrationTest {
         assertEquals(car.toDTO(), responseBody)
     }
 
-
     @Test
-    fun `POST locate - not found`() {
-        // Implement test for POST /locate when the group is not found
+    fun `POST locate should return 404 NotFound when group not exists`() {
+         webTestClient.post()
+            .uri("/locate")
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .bodyValue("id=200")
+            .exchange()
+            .expectStatus().isNotFound
     }
 
     @Test
-    fun `POST locate - no content`() {
-        // Implement test for POST /locate when no car is assigned
+    fun `POST locate should return 204 NoContent when group has not a car assigned`() {
+        val groupId = 300
+        val group = Group(groupId, 4)
+        groupRepository.save(group)
+
+        webTestClient.post()
+            .uri("/locate")
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .bodyValue("id=$groupId")
+            .exchange()
+            .expectStatus().isNoContent
     }
 
     @Test
-    fun `POST dropoff - success`() {
-        // Implement test for successful POST /dropoff
+    fun `POST dropoff should return 204 NoContent when group with car assigned is dropoff successfully`() {
+        val groupId = 400
+        val car = Car(400, 4)
+        carRepository.save(car)
+        val group = Group(groupId, 4)
+        groupRepository.save(group)
+        car.addGroup(group)
+        carRepository.update(car)
+
+        webTestClient.post()
+            .uri("/dropoff")
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .bodyValue("id=$groupId")
+            .exchange()
+            .expectStatus().isNoContent
     }
 
     @Test
-    fun `POST dropoff - not found`() {
-        // Implement test for POST /dropoff when the group is not found
+    fun `POST dropoff should return 204 NoContent when group without car assigned is dropoff successfully`() {
+        val groupId = 401
+        val group = Group(groupId, 4)
+        groupRepository.save(group)
+
+        webTestClient.post()
+            .uri("/dropoff")
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .bodyValue("id=$groupId")
+            .exchange()
+            .expectStatus().isNoContent
+    }
+
+    @Test
+    fun `POST dropoff should return 404 NotFound when group not exists`() {
+        val groupId = 500
+        webTestClient.post()
+            .uri("/dropoff")
+            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+            .bodyValue("id=$groupId")
+            .exchange()
+            .expectStatus().isNotFound
     }
 }
