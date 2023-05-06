@@ -20,23 +20,27 @@ class GroupController(private val groupService: GroupService) {
 
     @PostMapping("/locate", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun locate(request: LocateRequestForm): Mono<CarDTO> {
-        return groupService.locate(request.id)
-            .switchIfEmpty(
-                Mono.error(ResponseStatusException(HttpStatus.NO_CONTENT))
-            )
-            .onErrorResume(CarPoolException::class.java) {
-                Mono.error(ResponseStatusException(HttpStatus.NOT_FOUND, it.message))
-            }
+    fun locate(request: GroupIdFormRequest): Mono<CarDTO> {
+        return return request.validate().let { req ->
+            groupService.locate(req.groupId)
+                .switchIfEmpty(
+                    Mono.error(ResponseStatusException(HttpStatus.NO_CONTENT))
+                )
+                .onErrorResume(CarPoolException::class.java) {
+                    Mono.error(ResponseStatusException(HttpStatus.NOT_FOUND, it.message))
+                }
+        }
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping("/dropoff", consumes = [MediaType.APPLICATION_FORM_URLENCODED_VALUE],
         produces = [MediaType.APPLICATION_JSON_VALUE])
-    fun dropoff(request: LocateRequestForm): Mono<Void> {
-        return groupService.dropOff(request.id)
-            .onErrorResume(CarPoolException::class.java) {
-                Mono.error(ResponseStatusException(HttpStatus.NOT_FOUND, it.message))
-            }
+    fun dropoff(request: GroupIdFormRequest): Mono<Void> {
+        return request.validate().let { req ->
+            groupService.dropOff(req.groupId)
+                .onErrorResume(CarPoolException::class.java) { ex ->
+                    Mono.error(ResponseStatusException(HttpStatus.NOT_FOUND, ex.message))
+                }
+        }
     }
 }
