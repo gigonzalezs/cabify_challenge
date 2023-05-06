@@ -7,8 +7,16 @@ data class CarPoolAssignmentJob(
     val id: UUID = UUID.randomUUID(),
     var task: Mono<Unit>? = null,
     var status: JobStatus = JobStatus.QUEUED,
-    var result: String? = null
 ) {
+    var _asignations: Int = 0
+
+    val asignations: Int
+        get() = _asignations
+
+    fun increaseAssignation() {
+        _asignations++
+    }
+
     val isFinished: Boolean
         get() = status == JobStatus.COMPLETED || status == JobStatus.CANCELED
 }

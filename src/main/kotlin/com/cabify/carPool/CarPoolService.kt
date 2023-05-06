@@ -19,15 +19,17 @@ open class CarPoolService(
     private var enabled: Boolean = true
     private val logger = LoggerFactory.getLogger(CarPoolService::class.java)
     private var jobs = mutableListOf<CarPoolAssignmentJob>()
-    private var jobSink: Sinks.Many<CarPoolAssignmentJob> = Sinks.many().multicast().onBackpressureBuffer()
+    private var jobSink: Sinks.Many<CarPoolAssignmentJob> = Sinks.many().unicast().onBackpressureBuffer()
     private val jobsFlux: Flux<CarPoolAssignmentJob> = jobSink.asFlux()
 
     init {
-        jobsFlux.doOnNext { job ->
+        val mapperFun = { job: CarPoolAssignmentJob ->
             logger.debug("Nuevo trabajo encontrado con id: {}", job.id)
             job.task?.subscribeOn(Schedulers.boundedElastic())?.subscribe()
-
-        }.subscribeOn(Schedulers.boundedElastic()).subscribe()
+            Mono.just(job)
+        }
+        jobsFlux.flatMapSequential(mapperFun, 1)
+            .subscribeOn(Schedulers.boundedElastic()).subscribe()
     }
 
     fun clear() {
@@ -56,7 +58,7 @@ open class CarPoolService(
                     logger.debug("Ejecutando trabajo con id: {}", job.id)
                     job.execute()
                     job.status = JobStatus.COMPLETED
-                    logger.debug("Trabajo con id {} ha finalizado con resultado: {}", job.id, job.result)
+                    logger.debug("Trabajo con id {} ha finalizado con asginaciones: {}", job.id, job.asignations)
                 }
             }
             addJob(job)
@@ -68,11 +70,15 @@ open class CarPoolService(
     }
 
     fun assignCarToGroups(job: CarPoolAssignmentJob) {
+        logger.debug("intentando asignar carros trabajo con id: {}", job.id)
         var currentGroup = groupRepository.findFirst()
         while (currentGroup != null && job.status != JobStatus.CANCELED) {
             if (currentGroup.assignCar(job)) {
+                job.increaseAssignation()
+                logger.debug("HURRA! grupo {} asignado. trabajo con id: {}", currentGroup.id, job.id)
                 currentGroup = groupRepository.findFirst()
             } else {
+                logger.debug("grupo {} dejado en espera. trabajo con id: {}", currentGroup.id, job.id)
                 currentGroup = groupRepository.getNext()
             }
         }
@@ -87,14 +93,16 @@ open class CarPoolService(
         if (job.status == JobStatus.CANCELED) return false
         val availableCars = carRepository.findByAvailableSeats(this.numberOfPeople)
         return if (availableCars.isNotEmpty()) {
-            this.assignCarFromAvailable(availableCars)
+            logger.debug("encontramos un carro para el grupo {}. trabajo con id: {}", this.id, job.id)
+            this.assignCarFromAvailable(job, availableCars)
         } else {
             this.lookUpCarsBySeatAndAssign(job, MAX_SEATS)
         }
     }
 
-    private fun Group.assignCarFromAvailable(availableCars: List<Car>): Boolean {
+    private fun Group.assignCarFromAvailable(job: CarPoolAssignmentJob, availableCars: List<Car>): Boolean {
         val selectedCar = availableCars.first()
+        logger.debug("asignando carro {} al grupo {}. trabajo con id: {}", selectedCar.id, this.id, job.id)
         selectedCar.addGroup(this)
         carRepository.update(selectedCar)
         groupRepository.deQueue(this)
@@ -103,9 +111,10 @@ open class CarPoolService(
 
     private fun Group.lookUpCarsBySeatAndAssign(job: CarPoolAssignmentJob, carSeats: Int): Boolean {
         if (job.status == JobStatus.CANCELED) return false
+        logger.debug("buscando carro con {} asientos para el grupo {}. trabajo con id: {}", carSeats, this.id, job.id)
         val availableCars = carRepository.findByAvailableSeats(carSeats)
         return if (availableCars.isNotEmpty()) {
-            this.assignCarFromAvailable(availableCars)
+            this.assignCarFromAvailable(job, availableCars)
         } else {
             return if (MIN_SEATS < carSeats && carSeats > this.numberOfPeople) {
                 this.lookUpCarsBySeatAndAssign(job, carSeats - 1)
