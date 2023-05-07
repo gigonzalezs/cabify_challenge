@@ -15,8 +15,8 @@ class GroupService(
     private val carPoolService: CarPoolService
     ) {
 
-    fun clear() {
-        groupRepository.clear()
+    fun clear(resetState: Boolean = false) {
+        groupRepository.clear(resetState)
     }
 
     fun save(groupDTO: GroupDTO): Mono<Void> {

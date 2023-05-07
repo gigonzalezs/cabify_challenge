@@ -1,6 +1,7 @@
 package com.cabify.groups
 
 import com.cabify.CarPoolException
+import com.cabify.GroupNotFoundException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -56,14 +57,14 @@ class GroupRepositoryTest {
         groupRepository.save(group)
         groupRepository.deleteById(groupId)
 
-        assertThrows<CarPoolException> { groupRepository.findById(groupId) }
+        assertThrows<GroupNotFoundException> { groupRepository.findById(groupId) }
     }
 
     @Test
     fun `Given a non-existent group ID, When deleting it, Then an exception is thrown`() {
         val nonExistentGroupId = 1
 
-        assertThrows<CarPoolException> { groupRepository.deleteById(nonExistentGroupId) }
+        assertThrows<GroupNotFoundException> { groupRepository.deleteById(nonExistentGroupId) }
     }
 
     @Test

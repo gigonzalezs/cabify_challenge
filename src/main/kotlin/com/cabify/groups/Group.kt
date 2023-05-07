@@ -19,9 +19,12 @@ class Group(val id: Int, val numberOfPeople: Int) {
     fun releaseCar() {
         if (_assignedCar != null) {
             _assignedCar = null
-        } else {
-            throw CarPoolException("Cannot release a car if none is assigned")
         }
+        /*
+        FIX acceptance 13/17
+        else {
+            throw CarPoolException("Cannot release a car if none is assigned")
+        }*/
     }
 
     override fun toString(): String {

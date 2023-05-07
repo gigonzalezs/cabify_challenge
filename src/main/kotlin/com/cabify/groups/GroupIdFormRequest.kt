@@ -23,8 +23,14 @@ data class GroupIdFormRequest @JsonCreator constructor(
         }
     }
 
+    override fun toString(): String {
+        return "GroupIdFormRequest(ID=$ID)"
+    }
+
     val groupId: Int
         get() = _id!!
+
+
 }
 
 @ResponseStatus(HttpStatus.BAD_REQUEST)

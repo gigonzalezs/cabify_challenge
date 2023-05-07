@@ -1,6 +1,7 @@
 package com.cabify.groups
 
 import com.cabify.CarPoolException
+import com.cabify.GroupNotFoundException
 import org.springframework.stereotype.Service
 
 @Service
@@ -9,10 +10,18 @@ class GroupRepository {
     private var groupFifo = mutableListOf<Group>()
     private var groupIterator: Iterator<Group>? = null
 
-    fun clear() {
-        groupsByID = mutableMapOf()
+    fun clear(resetState: Boolean = false) {
+        // FIX acceptance test 13/17: do not remove groups on dropOff
+        // groupRepository.deleteById(groupId)
+        if(resetState) {
+            groupsByID = mutableMapOf()
+        }
+        // END FIX
         groupFifo = mutableListOf()
         groupIterator = null
+        groupsByID.forEach { entry ->
+            entry.value.releaseCar()
+        }
     }
     fun save(group: Group) {
         if (groupsByID.containsKey(group.id)) {
@@ -27,7 +36,7 @@ class GroupRepository {
     }
 
     fun findById(id: Int): Group = groupsByID[id] ?:
-        throw CarPoolException("Group not exists")
+        throw GroupNotFoundException("Group not exists")
 
     fun findFirst(): Group? {
         groupIterator = groupFifo.iterator()
@@ -53,7 +62,7 @@ class GroupRepository {
             groupFifo.remove(group)
             groupIterator = null
         } else {
-            throw CarPoolException("Group not found in the repository")
+            throw GroupNotFoundException("Group not found in the repository")
         }
     }
 

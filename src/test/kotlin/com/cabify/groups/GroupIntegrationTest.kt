@@ -40,7 +40,7 @@ class GroupControllerIntegrationTest {
 
     @BeforeEach
     fun setUp() {
-        groupService.clear()
+        groupService.clear(true)
         carRepository.clear()
         carPoolService.disable()
     }
