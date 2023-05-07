@@ -1,7 +1,9 @@
 package com.cabify.groups
 
 import com.cabify.CarPoolException
+import com.cabify.GroupAlreadyExistsException
 import com.cabify.GroupNotFoundException
+import com.cabify.InvalidGroupException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
@@ -109,7 +111,7 @@ class GroupRepositoryTest {
 
         groupRepository.save(group)
 
-        assertThrows<CarPoolException> { groupRepository.save(anotherGroup) }
+        assertThrows<GroupAlreadyExistsException> { groupRepository.save(anotherGroup) }
     }
 
     @Test
@@ -118,7 +120,7 @@ class GroupRepositoryTest {
         val invalidPeopleCount = 0
         val group = Group(groupId, invalidPeopleCount)
 
-        assertThrows<CarPoolException> { groupRepository.save(group) }
+        assertThrows<InvalidGroupException> { groupRepository.save(group) }
     }
 
     @Test
@@ -127,6 +129,6 @@ class GroupRepositoryTest {
         val tooManyPeople = 7
         val group = Group(groupId, tooManyPeople)
 
-        assertThrows<CarPoolException> { groupRepository.save(group) }
+        assertThrows<InvalidGroupException> { groupRepository.save(group) }
     }
 }

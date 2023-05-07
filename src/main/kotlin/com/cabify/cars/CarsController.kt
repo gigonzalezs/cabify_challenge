@@ -21,12 +21,15 @@ class CarsController(
 
     @PutMapping("/cars", consumes = [MediaType.APPLICATION_JSON_VALUE])
     @ResponseStatus(HttpStatus.OK)
-    fun loadCars(@RequestBody cars: Flux<CarDTO>): Mono<Void>  {
+    fun loadCars(@RequestBody cars: List<CarDTO>): Mono<Void>  {
         logger.debug("PUT /cars")
         carService.clear()
-        groupService.clear()
+        groupService.clear(true)
         carPoolService.clear()
-        return carService.saveAll(cars)
+        if (cars.isEmpty()) {
+            return Mono.empty()
+        }
+        return carService.saveAll(Flux.fromIterable(cars))
     }
 
     @GetMapping("/cars", produces = [MediaType.APPLICATION_JSON_VALUE])

@@ -16,5 +16,16 @@ open class CarPoolExceptionFilter : WebFilter {
                 exchange.response.bufferFactory().wrap(byteArrayOf())
                 Mono.empty<Void>()
             }
+            .onErrorResume(GroupAlreadyExistsException::class.java) {
+                exchange.response.statusCode = HttpStatus.CONFLICT
+                exchange.response.bufferFactory().wrap(byteArrayOf())
+                Mono.empty<Void>()
+            }
+            .onErrorResume(InvalidGroupException::class.java) {
+                exchange.response.statusCode = HttpStatus.BAD_REQUEST
+                exchange.response.bufferFactory().wrap(byteArrayOf())
+                Mono.empty<Void>()
+            }
+
     }
 }
