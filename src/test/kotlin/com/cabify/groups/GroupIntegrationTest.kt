@@ -91,7 +91,7 @@ class GroupControllerIntegrationTest {
         val response = webTestClient.post()
             .uri("/locate")
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .bodyValue("id=$groupId")
+            .bodyValue("ID=$groupId")
             .exchange()
             .expectStatus().isOk
             .expectHeader().contentType(MediaType.APPLICATION_JSON)
@@ -108,7 +108,7 @@ class GroupControllerIntegrationTest {
          webTestClient.post()
             .uri("/locate")
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .bodyValue("id=200")
+            .bodyValue("ID=200")
             .exchange()
             .expectStatus().isNotFound
     }
@@ -122,7 +122,7 @@ class GroupControllerIntegrationTest {
         webTestClient.post()
             .uri("/locate")
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .bodyValue("id=$groupId")
+            .bodyValue("ID=$groupId")
             .exchange()
             .expectStatus().isNoContent
     }
@@ -140,7 +140,7 @@ class GroupControllerIntegrationTest {
         webTestClient.post()
             .uri("/dropoff")
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .bodyValue("id=$groupId")
+            .bodyValue("ID=$groupId")
             .exchange()
             .expectStatus().isNoContent
     }
@@ -154,7 +154,7 @@ class GroupControllerIntegrationTest {
         webTestClient.post()
             .uri("/dropoff")
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .bodyValue("id=$groupId")
+            .bodyValue("ID=$groupId")
             .exchange()
             .expectStatus().isNoContent
     }
@@ -165,7 +165,7 @@ class GroupControllerIntegrationTest {
         webTestClient.post()
             .uri("/dropoff")
             .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-            .bodyValue("id=$groupId")
+            .bodyValue("ID=$groupId")
             .exchange()
             .expectStatus().isNotFound
     }
