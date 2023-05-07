@@ -102,7 +102,11 @@ open class CarPoolService(
             logger.debug("encontramos un carro para el grupo {}. trabajo con id: {}", this.id, job.id)
             this.assignCarFromAvailable(job, availableCars)
         } else {
-            this.lookUpCarsBySeatAndAssign(job, MAX_SEATS)
+            if (this.numberOfPeople < MAX_SEATS) {
+                this.lookUpCarsBySeatAndAssign(job, this.numberOfPeople + 1)
+            } else {
+                return false
+            }
         }
     }
 
@@ -122,8 +126,8 @@ open class CarPoolService(
         return if (availableCars.isNotEmpty()) {
             this.assignCarFromAvailable(job, availableCars)
         } else {
-            return if (MIN_SEATS < carSeats && carSeats > this.numberOfPeople) {
-                this.lookUpCarsBySeatAndAssign(job, carSeats - 1)
+            return if (carSeats < MAX_SEATS) {
+                this.lookUpCarsBySeatAndAssign(job, carSeats + 1)
             } else {
                 false
             }

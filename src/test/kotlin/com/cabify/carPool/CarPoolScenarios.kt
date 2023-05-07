@@ -95,10 +95,10 @@ fun `Asegurando el orden de llegada de los grupos y optimizacion de asientos ocu
     val expectedMatches = listOf(
         ExpectedMatch(cars.findFirstBySeats(5)!!,
             listOf(
-                groups.findFirstByPeople(3)!!,
                 groups.findFirstByPeople(2)!!)
         ),
         ExpectedMatch(cars.findFirstBySeats(4)!!, listOf(
+            groups.findFirstByPeople(3)!!,
             groups.findFirstByPeople(1)!!)
         ),
     )
