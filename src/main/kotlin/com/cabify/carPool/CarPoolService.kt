@@ -21,6 +21,7 @@ open class CarPoolService(
     private var jobs = mutableListOf<CarPoolAssignmentJob>()
     private var jobSink: Sinks.Many<CarPoolAssignmentJob> = Sinks.many().unicast().onBackpressureBuffer()
     private val jobsFlux: Flux<CarPoolAssignmentJob> = jobSink.asFlux()
+    private var _currentJob: CarPoolAssignmentJob? = null
 
     init {
         val mapperFun = { job: CarPoolAssignmentJob ->
@@ -31,6 +32,9 @@ open class CarPoolService(
         jobsFlux.flatMapSequential(mapperFun, 1)
             .subscribeOn(Schedulers.boundedElastic()).subscribe()
     }
+
+    val currentJob: CarPoolAssignmentJob?
+        get() = _currentJob
 
     fun clear() {
         jobs.forEach {
@@ -54,10 +58,12 @@ open class CarPoolService(
         ).doOnNext { job ->
             job.task = Mono.fromCallable {
                 if (job.status != JobStatus.CANCELED) {
+                    _currentJob = job
                     job.status = JobStatus.RUNNING
                     logger.debug("Ejecutando trabajo con id: {}", job.id)
                     job.execute()
                     job.status = JobStatus.COMPLETED
+                    _currentJob = null
                     logger.debug("Trabajo con id {} ha finalizado con asginaciones: {}", job.id, job.asignations)
                 }
             }

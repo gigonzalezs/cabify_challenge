@@ -7,6 +7,7 @@ import com.cabify.cars.CarRepository
 import com.cabify.cars.toDTO
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
+import java.time.Duration
 
 @Service
 class GroupService(
@@ -27,9 +28,20 @@ class GroupService(
 
     fun locate(groupId: Int): Mono<CarDTO> {
         try {
-            val group = groupRepository.findById(groupId)
-            val assignedCar = group.assignedCar ?: return Mono.empty()
-            return Mono.just(assignedCar.toDTO())
+            val group: Mono<Group> = if (carPoolService.currentJob != null) {
+                Mono.delay(Duration.ofMillis(500))
+                    .map { groupRepository.findById(groupId) }
+            } else {
+                Mono.just(groupRepository.findById(groupId))
+            }
+            return group
+                .flatMap { g ->
+                    if (g.assignedCar != null) {
+                        Mono.just(g.assignedCar!!.toDTO())
+                    } else {
+                        Mono.empty()
+                    }
+                }
         } catch (e: CarPoolException) {
             return Mono.error(e)
         }
