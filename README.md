@@ -218,3 +218,92 @@ following survey:
 - https://forms.gle/EzPeURspTCLG1q9T7
 
 Your participation is really important. Thanks for your contribution!
+
+## How To Install
+
+### Runtime Environment
+
+Make sure you have JDK 11 installed 
+
+To build and run tests:
+
+```
+./gradlew clean build
+```
+
+After build, to execute after build
+
+```
+java -jar build/libs/app.jar
+```
+
+### Running in Docker
+
+To build the image:
+
+```
+docker build --no-cache --progress=plain -t cabify_challenge:latest .
+```
+
+Then execute:
+
+```
+docker run -d cabify_challenge:latest
+```
+
+## Design Notes
+
+- The project was developed in Kotlin + Springboot + WebFlux (Reactive) + Gradle
+- Feature packaging strategy
+- No Database, In-Memory (heap) repositories
+- Relationship between Cars and Groups based in object references
+- Asynchronous Job based car assignment process
+
+### About the Algorithm
+
+There are two events to activate the car assignment process:
+
+- When a journey is created
+- When a group is dropoff
+
+About the Jobs:
+
+- Both events creates a Job and this job is executed asynchronously.
+- There is zero concurrency of Jobs (Sequential execution)
+- Each Job can be cancelled.
+- Each Job can executes the assignment process once
+
+About the assignment process:
+
+- The Algorithm get the oldest journey and try to assign a car.
+- If no car available, go to the next journey and try again, until assignment or no more journeys
+- If car available, assign it start again with the oldest journey (the first in the queue)
+- when no more assignation and reach the end of the queue, the job is complete.
+
+About the car selection process:
+
+- The Algorithm try to select a car with the same amount of seats as people in the journey
+- If not, add 1 to the required seats and try again, until required seats reach the maximun (6)
+- If no car available, the journey remains in the queue and will be processed by a sequential job (if exist)
+- If car assigned, the journey is removed from the queue.
+
+### How In memory repository works:
+
+#### Cars:
+
+- Cars repository have an index for Id, based in HashMap
+- Cars repository have an index for available seats, based in Array of List of Cars. Each position in the array represent available seats.
+- When seats of a car are occupied or released, the Car is moved to the right position in the array
+
+### Journeys (Groups)
+
+- Groups repository have an index for Id, based in HashMap
+- Groups repository have a FIFO queue, based on List and Iterator
+
+### How Job Queue works:
+
+- the Job Queue is based on a combination of Synks and Flux, enabling backpressure for reactive and asynchronous processing.
+- This means each time we append an object to the Synks, The Flux consumes the object
+- The Flux concurrency is set to 1
+
+co-authored by: gilbert Gonzalez <gilbert.uy.gonzalez@gmail.com>
