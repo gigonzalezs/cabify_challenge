@@ -306,4 +306,42 @@ About the car selection process:
 - This means each time we append an object to the Synks, The Flux consumes the object
 - The Flux concurrency is set to 1
 
-co-authored by: gilbert Gonzalez <gilbert.uy.gonzalez@gmail.com>
+### Feedback from the technical interview team:
+
+#### Solution
+- It works and full-fills the requirements
+- Efficiently bin-packs car assignment
+- Performs very well on the test suites
+- Easy to run
+- The deliverable doesn't include documentation on how to run it
+- No documentation on decision making, thought-process and trade-offs
+
+#### Production readiness
+- Error messages are meaningful for the customer
+- Lot of DEBUG level logs, without having a single INFO level log
+
+#### General code style
+- Code is consistent, homogeneous and follows Kotlin community standards
+- Naming (classes, methods, modules, variables, parameters) is clear and does reflect business concerns
+- Cyclomatic complexity could be lower in some case (eg.: GroupService.locate)
+- Not used imports
+- Commented lines, even classes
+
+#### Design
+- Code is maintainable and allows extension points
+- Very simple solution
+- Code doesn't follow SOLID principles. For example GroupService is responsible for both locate and dropoff
+- No abstractions are used at all, there are no interfaces in the code
+- Infra and domain is in the same package
+- Same DTOs are used both for input and output (like CarDTO)
+- Most of the domain logic is in services
+- Code complexity hasn't been analysed
+
+#### Testability
+- It has tests with clear names and well-written expectations
+- Clearly separated blocks for arrangement, execution and assertion
+- BDD style (given, when, then)
+- Good integration tests
+
+### Conclusion: The solution is not good enough to hire me.
+
